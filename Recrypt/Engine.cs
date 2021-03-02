@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Recrypt.Core
 {
-    public static class XOREngine
+    public static class Engine
     {
         /// <summary>
         /// Encrypt/Decrypt byte array with other byte array as key.
@@ -63,6 +63,56 @@ namespace Recrypt.Core
             RecryptInPlace(recrypted, key);
             stream.SetLength(0);
             stream.Write(recrypted);
+        }
+        /// <summary>
+        /// Works with IBytes instances.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public static byte[] Recrypt(in IBytes source, in IBytes key)
+        {
+            return RecryptInPlace(source.GetBytes(), key.GetBytes());
+        }
+        /// <summary>
+        /// Works with IBytes instances.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public static byte[] Recrypt(in IBytes source, in byte[] key)
+        {
+            return RecryptInPlace(source.GetBytes(), key);
+        }
+        /// <summary>
+        /// Works with IBytes instances.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public static byte[] Recrypt(in byte[] source, in IBytes key)
+        {
+            return RecryptInPlace(source, key.GetBytes());
+        }
+        /// <summary>
+        /// Works with string keys in UTF-8.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public static byte[] Recrypt(in byte[] source, in string key)
+        {
+            return RecryptInPlace(source, Encoding.UTF8.GetBytes(key));
+        }
+        /// <summary>
+        /// Works with string keys in UTF-8.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public static byte[] Recrypt(in IBytes source, in string key)
+        {
+            return RecryptInPlace(source.GetBytes(), Encoding.UTF8.GetBytes(key));
         }
     }
 }
