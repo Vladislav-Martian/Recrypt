@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Recrypt.Core
 {
-    public static class Engine
+    public static class CryptoEngine
     {
         /// <summary>
         /// Encrypt/Decrypt byte array with other byte array as key.
@@ -46,6 +46,36 @@ namespace Recrypt.Core
         public static byte[] Recrypt(in byte[] source, in byte[] key, in bool inPlace = true)
         {
             return inPlace ? RecryptInPlace(source, key) : RecryptOutPlace(source, key);
+        }
+        /// <summary>
+        /// Encrypt string with bytes
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public static byte[] Recrypt(in string source, in byte[] key)
+        {
+            return RecryptInPlace(Byter.GetBytes(source), key);
+        }
+        /// <summary>
+        /// Works with string keys in UTF-8.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public static byte[] Recrypt(in byte[] source, in string key)
+        {
+            return RecryptInPlace(source, Encoding.UTF8.GetBytes(key));
+        }
+        /// <summary>
+        /// Encrypt string with string
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public static byte[] Recrypt(in string source, in string key)
+        {
+            return RecryptInPlace(Byter.GetBytes(source), Byter.GetBytes(key));
         }
         /// <summary>
         /// Encrypt/Decrypt data in any stream (FileStream, etc...)
@@ -100,19 +130,13 @@ namespace Recrypt.Core
         /// <param name="source"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-        public static byte[] Recrypt(in byte[] source, in string key)
-        {
-            return RecryptInPlace(source, Encoding.UTF8.GetBytes(key));
-        }
-        /// <summary>
-        /// Works with string keys in UTF-8.
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="key"></param>
-        /// <returns></returns>
         public static byte[] Recrypt(in IBytes source, in string key)
         {
             return RecryptInPlace(source.GetBytes(), Encoding.UTF8.GetBytes(key));
         }
+        //==================================================//
+
+
+        //==================================================//
     }
 }
