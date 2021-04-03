@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace Recrypt.Core
+namespace Recryptor
 {
-    public static class CryptoEngine
+    public static class Engine
     {
         /// <summary>
         /// Encrypt/Decrypt byte array with other byte array as key.
@@ -48,16 +48,6 @@ namespace Recrypt.Core
             return inPlace ? RecryptInPlace(source, key) : RecryptOutPlace(source, key);
         }
         /// <summary>
-        /// Encrypt string with bytes
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        public static byte[] Recrypt(in string source, in byte[] key)
-        {
-            return RecryptInPlace(Byter.GetBytes(source), key);
-        }
-        /// <summary>
         /// Works with string keys in UTF-8.
         /// </summary>
         /// <param name="source"></param>
@@ -67,16 +57,7 @@ namespace Recrypt.Core
         {
             return RecryptInPlace(source, Encoding.UTF8.GetBytes(key));
         }
-        /// <summary>
-        /// Encrypt string with string
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        public static byte[] Recrypt(in string source, in string key)
-        {
-            return RecryptInPlace(Byter.GetBytes(source), Byter.GetBytes(key));
-        }
+
         /// <summary>
         /// Encrypt/Decrypt data in any stream (FileStream, etc...)
         /// </summary>
@@ -94,49 +75,85 @@ namespace Recrypt.Core
             stream.SetLength(0);
             stream.Write(recrypted);
         }
-        /// <summary>
-        /// Works with IBytes instances.
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        public static byte[] Recrypt(in IBytes source, in IBytes key)
-        {
-            return RecryptInPlace(source.GetBytes(), key.GetBytes());
-        }
-        /// <summary>
-        /// Works with IBytes instances.
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        public static byte[] Recrypt(in IBytes source, in byte[] key)
-        {
-            return RecryptInPlace(source.GetBytes(), key);
-        }
-        /// <summary>
-        /// Works with IBytes instances.
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        public static byte[] Recrypt(in byte[] source, in IBytes key)
-        {
-            return RecryptInPlace(source, key.GetBytes());
-        }
-        /// <summary>
-        /// Works with string keys in UTF-8.
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        public static byte[] Recrypt(in IBytes source, in string key)
-        {
-            return RecryptInPlace(source.GetBytes(), Encoding.UTF8.GetBytes(key));
-        }
-        //==================================================//
-
 
         //==================================================//
+        // Extract bytes from stream:
+        /// <summary>
+        /// Get bytes from file stream
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <returns></returns>
+        public static byte[] ExtractBytes(in Stream stream)
+        {
+            if (!stream.CanRead)
+            {
+                throw new Exception("Stream is unavailable for read.");
+            }
+            var bytes = new byte[stream.Length];
+            stream.Read(bytes);
+            return bytes;
+        }
+
+    }
+
+    //==================================================//
+    // Class to in flow recrypt
+    /// <summary>
+    /// Class represents object that encrypts/decrypts item bytes by key: byte[]
+    /// </summary>
+    public sealed class AutoXOR : IDisposable
+    {
+        private byte[] key;
+        private int stage;
+        private readonly int len;
+        //==================================================//
+        public void Dispose()
+        {
+            key = null;
+        }
+        //==================================================//
+        public AutoXOR(in byte[] key)
+        {
+            this.key = key;
+            len = key.Length;
+            this.stage = -1;
+        }
+        public AutoXOR(in string key)
+        {
+            this.key = Encoding.UTF8.GetBytes(key);
+            len = key.Length;
+            stage = 0;
+        }
+        //==================================================//
+        public byte Apply(in byte source)
+        {
+            stage++;
+            return (byte)(source ^ key[stage % len]);
+        }
+
+        public int Apply(in int source)
+        {
+            stage++;
+            return source ^ key[stage % len];
+        }
+
+        public byte[] ApplyArrayIn(in byte[] source)
+        {
+            for (int i = 0; i < source.Length; i++)
+            {
+                source[i] = Apply(source[i]);
+            }
+            return source;
+        }
+
+        public byte[] ApplyArrayOut(in byte[] source)
+        {
+            var result = new byte[source.Length];
+            for (int i = 0; i < source.Length; i++)
+            {
+                result[i] = Apply(source[i]);
+            }
+            return result;
+        }
     }
 }

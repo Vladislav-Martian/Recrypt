@@ -9,8 +9,4 @@
     <PackageReference Include="CommandLineParser" Version="2.8.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Recrypt\Recrypt.csproj" />
-  </ItemGroup>
-
 </Project>

@@ -1,13 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 
-namespace Recrypt.Core
+namespace Recryptor
 {
     [Serializable]
-    public class FileModel: IBytes
+    public class FileModel
     {
         public string Extension { get; private set; }
         public string Name { get; private set; }
@@ -50,27 +49,14 @@ namespace Recrypt.Core
             return new FileModel(content, Path.GetFileNameWithoutExtension(fi.Name), fi.Extension);
         }
 
-        public static void Save(in FileModel model, in string adr)
+        public static void Save(in FileModel model, in string adr, in string rename = null)
         {
             var di = new DirectoryInfo(adr);
             if (!di.Exists)
             {
                 di.Create();
             }
-            var adress = adr + "\\" + model.FullName;
-            using (var fs = new FileStream(adress, FileMode.OpenOrCreate, FileAccess.Write))
-            {
-                fs.Write(model.Content);
-            }
-        }
-        public static void Save(in FileModel model, in string adr, in string rename)
-        {
-            var di = new DirectoryInfo(adr);
-            if (!di.Exists)
-            {
-                di.Create();
-            }
-            model.Name = rename;
+            if (rename != null) model.Name = rename;
             var adress = adr + "\\" + model.FullName;
             using (var fs = new FileStream(adress, FileMode.OpenOrCreate, FileAccess.Write))
             {
@@ -88,9 +74,9 @@ namespace Recrypt.Core
         }
         public void Recrypt(in byte[] key)
         {
-            CryptoEngine.RecryptInPlace(Content, key);
-            Name = Encoding.UTF8.GetString(CryptoEngine.RecryptInPlace(Byter.GetBytes(Name), key));
-            Extension = Encoding.UTF8.GetString(CryptoEngine.RecryptInPlace(Byter.GetBytes(Extension), key));
+            Engine.RecryptInPlace(Content, key);
+            Name = Encoding.UTF8.GetString(Engine.RecryptInPlace(Encoding.UTF8.GetBytes(Name), key));
+            Extension = Encoding.UTF8.GetString(Engine.RecryptInPlace(Encoding.UTF8.GetBytes(Extension), key));
         }
 
         public FileModel EncryptAndPack(in byte[] key, in string name = "Unnamed")
@@ -103,7 +89,7 @@ namespace Recrypt.Core
         {
             var ms = new MemoryStream(Content);
             ms.Position = 0;
-            var res =  (FileModel)formatter.Deserialize(ms);
+            var res = (FileModel)formatter.Deserialize(ms);
             res.Recrypt(key);
             return res;
         }
